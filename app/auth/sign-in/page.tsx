@@ -49,12 +49,13 @@ export default function SignInPage() {
         title: "Success",
         description: "You have been signed in successfully.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to sign in. Please check your credentials.",
         variant: "destructive",
       });
+
       setIsLoading(false);
     }
   };

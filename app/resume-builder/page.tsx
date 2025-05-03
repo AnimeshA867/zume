@@ -1,5 +1,4 @@
 "use client";
-import * as z from "zod";
 import type React from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useState, useEffect, useRef } from "react";
@@ -45,8 +44,6 @@ import {
   sectionTypes,
   defaultPersonalDetails,
 } from "./lib/defaultData";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function ResumeBuilderPage() {
   const [jobDescription, setJobDescription] = useState("");
@@ -68,23 +65,6 @@ export default function ResumeBuilderPage() {
   );
 
   // Load saved data from localStorage if available
-
-  const formSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().optional(),
-    address: z.string().optional(),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-    },
-  });
 
   useEffect(() => {
     const savedSections = localStorage.getItem("zume-resume-sections");

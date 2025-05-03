@@ -75,7 +75,7 @@ export function ResumePreview({
   return (
     <div
       ref={previewRef}
-      className="h-full w-full overflow-auto rounded-lg border bg-white p-8 shadow"
+      className="h-full w-full overflow-auto rounded-lg border bg-white p-8 shadow pt-12"
     >
       <div className="mx-auto max-w-[8.5in] space-y-6">
         {/* Header with personal details */}

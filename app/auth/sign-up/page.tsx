@@ -50,7 +50,7 @@ export default function SignUpPage() {
         title: "Success",
         description: "Your account has been created successfully.",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create account. Please try again.",
