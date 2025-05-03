@@ -1,9 +1,8 @@
 "use client";
-
+import * as z from "zod";
 import type React from "react";
-
-import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +13,12 @@ import { ResumePreview } from "@/components/resume-builder/resume-preview";
 // import { useToast } from "@/components/ui/use-toast";
 // import { useToast } from "@/components/ui/use-toast";
 import { useToast } from "@/hooks/use-toast";
-import type { ResumeSection as ResumeSectionType } from "@/lib/types";
+import type {
+  ResumeSection as ResumeSectionType,
+  PersonalDetailsType,
+} from "@/lib/types";
+import { PersonalDetails } from "@/components/resume-builder/personal-details";
+
 import { Download, Plus, Wand2, Loader2 } from "lucide-react";
 import { ResumeUpload } from "@/components/resume-builder/resume-upload";
 import { ResumeRating } from "@/components/resume-builder/resume-rating";
@@ -36,100 +40,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { generatePDF } from "../actions/generate-pdf";
-
-const defaultSections: ResumeSectionType[] = [
-  {
-    id: uuidv4(),
-    title: "Contact Information",
-    content:
-      "<p>Your Name<br>Email: your.email@example.com<br>Phone: (123) 456-7890<br>Location: City, State<br>LinkedIn: linkedin.com/in/yourname</p>",
-    order: 0,
-    type: "contact",
-  },
-  {
-    id: uuidv4(),
-    title: "Summary",
-    content:
-      "<p>Experienced professional with a track record of success in...</p>",
-    order: 1,
-    type: "summary",
-  },
-  {
-    id: uuidv4(),
-    title: "Experience",
-    content:
-      "<p>Company Name | Position Title | Date - Date</p><ul><li>Accomplishment 1</li><li>Accomplishment 2</li><li>Accomplishment 3</li></ul>",
-    order: 2,
-    type: "experience",
-  },
-  {
-    id: uuidv4(),
-    title: "Education",
-    content:
-      "<p>University Name | Degree | Graduation Date</p><ul><li>GPA: 3.8/4.0</li><li>Relevant Coursework: Course 1, Course 2</li></ul>",
-    order: 3,
-    type: "education",
-  },
-  {
-    id: uuidv4(),
-    title: "Skills",
-    content:
-      "<p>Technical Skills: Skill 1, Skill 2, Skill 3<br>Soft Skills: Communication, Leadership, Problem Solving</p>",
-    order: 4,
-    type: "skills",
-  },
-];
-
-// Available section types for adding new sections
-const sectionTypes = [
-  {
-    id: "certifications",
-    title: "Certifications",
-    content:
-      "<p>Certification Name | Issuing Organization | Date</p><ul><li>Details about the certification</li><li>Skills or knowledge gained</li></ul>",
-  },
-  {
-    id: "projects",
-    title: "Projects",
-    content:
-      "<p>Project Name | Role | Date</p><ul><li>Description of the project</li><li>Technologies used</li><li>Outcomes or achievements</li></ul>",
-  },
-  {
-    id: "languages",
-    title: "Languages",
-    content:
-      "<p>Language 1 - Proficiency Level<br>Language 2 - Proficiency Level</p>",
-  },
-  {
-    id: "volunteer",
-    title: "Volunteer Experience",
-    content:
-      "<p>Organization Name | Role | Date</p><ul><li>Responsibilities and contributions</li><li>Impact or results</li></ul>",
-  },
-  {
-    id: "publications",
-    title: "Publications",
-    content:
-      "<p>Title of Publication | Publisher | Date</p><p>Brief description or abstract</p>",
-  },
-  {
-    id: "awards",
-    title: "Awards & Honors",
-    content:
-      "<p>Award Name | Issuing Organization | Date</p><p>Brief description of the award and its significance</p>",
-  },
-  {
-    id: "references",
-    title: "References",
-    content:
-      '<p>Reference Name | Position | Company<br>Email: email@example.com | Phone: (123) 456-7890</p><p>"Reference quote or note about availability upon request."</p>',
-  },
-  {
-    id: "custom",
-    title: "Custom Section",
-    content: "<p>Add your content here...</p>",
-  },
-];
+import {
+  defaultSections,
+  sectionTypes,
+  defaultPersonalDetails,
+} from "./lib/defaultData";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function ResumeBuilderPage() {
   const [jobDescription, setJobDescription] = useState("");
@@ -146,13 +63,35 @@ export default function ResumeBuilderPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const [personalDetails, setPersonalDetails] = useState<PersonalDetailsType>(
+    defaultPersonalDetails
+  );
 
   // Load saved data from localStorage if available
+
+  const formSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email address"),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+    },
+  });
+
   useEffect(() => {
     const savedSections = localStorage.getItem("zume-resume-sections");
     const savedTemplate = localStorage.getItem("zume-resume-template");
     const savedJobDescription = localStorage.getItem("zume-job-description");
     const savedProfileImage = localStorage.getItem("zume-profile-image");
+    const savedPersonalDetails = localStorage.getItem("zume-personal-details");
 
     if (savedSections) {
       setSections(JSON.parse(savedSections));
@@ -169,6 +108,9 @@ export default function ResumeBuilderPage() {
     if (savedProfileImage) {
       setProfileImage(savedProfileImage);
     }
+    if (savedPersonalDetails) {
+      setPersonalDetails(JSON.parse(savedPersonalDetails));
+    }
   }, []);
 
   // Save data to localStorage when it changes
@@ -176,13 +118,23 @@ export default function ResumeBuilderPage() {
     localStorage.setItem("zume-resume-sections", JSON.stringify(sections));
     localStorage.setItem("zume-resume-template", selectedTemplate);
     localStorage.setItem("zume-job-description", jobDescription);
+    localStorage.setItem(
+      "zume-personal-details",
+      JSON.stringify(personalDetails)
+    );
 
     if (profileImage) {
       localStorage.setItem("zume-profile-image", profileImage);
     } else {
       localStorage.removeItem("zume-profile-image");
     }
-  }, [sections, selectedTemplate, jobDescription, profileImage]);
+  }, [
+    sections,
+    selectedTemplate,
+    jobDescription,
+    profileImage,
+    personalDetails,
+  ]);
 
   // Handle PDF download when URL is available
   useEffect(() => {
@@ -376,6 +328,7 @@ export default function ResumeBuilderPage() {
         sections: sections.sort((a, b) => a.order - b.order),
         templateId: selectedTemplate,
         profileImage: profileImage,
+        personalDetails: personalDetails,
       };
 
       // Create form data for the server action
@@ -416,6 +369,9 @@ export default function ResumeBuilderPage() {
     router.push("/auth/sign-in?redirect=/resume-builder");
   };
 
+  const handleUpdatePersonalDetails = (details: PersonalDetailsType) => {
+    setPersonalDetails(details);
+  };
   return (
     <div className="container py-8">
       <h1 className="mb-6 text-3xl font-bold">Resume Builder</h1>
@@ -491,22 +447,30 @@ export default function ResumeBuilderPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-
+            <PersonalDetails
+              initialDetails={personalDetails}
+              onUpdate={handleUpdatePersonalDetails}
+            />
             {sections
               .sort((a, b) => a.order - b.order)
-              .map((section) => (
-                <ResumeSection
-                  key={section.id}
-                  id={section.id}
-                  title={section.title}
-                  content={section.content}
-                  onUpdate={handleUpdateSection}
-                  onDelete={handleDeleteSection}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                />
-              ))}
+              .map((section) => {
+                if (section.title.toLowerCase() !== "contact information") {
+                  return (
+                    <ResumeSection
+                      key={section.id}
+                      id={section.id}
+                      title={section.title}
+                      content={section.content}
+                      onUpdate={handleUpdateSection}
+                      onDelete={handleDeleteSection}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    />
+                  );
+                }
+                return null;
+              })}
           </div>
         </div>
 
@@ -558,6 +522,7 @@ export default function ResumeBuilderPage() {
                   sections={sections.sort((a, b) => a.order - b.order)}
                   templateId={selectedTemplate}
                   profileImage={profileImage}
+                  personalDetails={personalDetails}
                 />
               </TabsContent>
               <TabsContent value="code" className="h-[calc(800px-48px)] p-4">
@@ -565,6 +530,7 @@ export default function ResumeBuilderPage() {
                   <code>
                     {JSON.stringify(
                       {
+                        personalDetails,
                         profileImage: profileImage ? "data:image/..." : null,
                         sections,
                       },

@@ -14,6 +14,7 @@ import { Loader2, ThumbsUp, AlertCircle } from "lucide-react";
 // import { useToast } from "@/components/ui/use-toast"
 import { useToast } from "@/hooks/use-toast";
 import type { ResumeSection } from "@/lib/types";
+import React from "react";
 
 interface ResumeRatingProps {
   sections: ResumeSection[];

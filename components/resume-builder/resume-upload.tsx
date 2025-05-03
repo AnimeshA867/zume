@@ -14,13 +14,17 @@ import {
 import { Upload, FileText, Loader2 } from "lucide-react";
 // import { useToast } from "@/components/ui/use-toast"
 import { useToast } from "@/hooks/use-toast";
-import type { ResumeSection } from "@/lib/types";
+import type { ResumeSection, PersonalDetailsType } from "@/lib/types";
 
 interface ResumeUploadProps {
   onExtract: (sections: ResumeSection[]) => void;
+  onExtractPersonalDetails?: (details: PersonalDetailsType) => void;
 }
 
-export function ResumeUpload({ onExtract }: ResumeUploadProps) {
+export function ResumeUpload({
+  onExtract,
+  onExtractPersonalDetails,
+}: ResumeUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -56,19 +60,11 @@ export function ResumeUpload({ onExtract }: ResumeUploadProps) {
     // In a real implementation, this would parse the resume file
     const extractedSections: ResumeSection[] = [
       {
-        id: "contact",
-        title: "Contact Information",
-        content:
-          '<p>John Doe<br>Email: <a href="mailto:john.doe@example.com">john.doe@example.com</a><br>Phone: (123) 456-7890<br>Location: New York, NY<br>LinkedIn: <a href="https://linkedin.com/in/johndoe" target="_blank">linkedin.com/in/johndoe</a></p>',
-        order: 0,
-        type: "contact",
-      },
-      {
         id: "summary",
         title: "Summary",
         content:
           "<p>Experienced software engineer with 5+ years of experience in web development and cloud technologies.</p>",
-        order: 1,
+        order: 0,
         type: "summary",
       },
       {
@@ -76,7 +72,7 @@ export function ResumeUpload({ onExtract }: ResumeUploadProps) {
         title: "Experience",
         content:
           "<p><strong>Senior Developer</strong> | ABC Tech | 2020 - Present</p><ul><li>Led development of cloud-based applications</li><li>Improved system performance by 40%</li></ul><p><strong>Web Developer</strong> | XYZ Solutions | 2018 - 2020</p><ul><li>Developed responsive web applications</li><li>Collaborated with design team on UI/UX improvements</li></ul>",
-        order: 2,
+        order: 1,
         type: "experience",
       },
       {
@@ -84,7 +80,7 @@ export function ResumeUpload({ onExtract }: ResumeUploadProps) {
         title: "Education",
         content:
           "<p><strong>Bachelor of Science in Computer Science</strong><br>University of Technology | 2018</p><ul><li>GPA: 3.8/4.0</li><li>Relevant Coursework: Data Structures, Algorithms, Web Development</li></ul>",
-        order: 3,
+        order: 2,
         type: "education",
       },
       {
@@ -92,7 +88,7 @@ export function ResumeUpload({ onExtract }: ResumeUploadProps) {
         title: "Skills",
         content:
           "<p><strong>Technical Skills:</strong> JavaScript, React, Node.js, AWS, Python<br><strong>Soft Skills:</strong> Communication, Teamwork, Problem Solving</p>",
-        order: 4,
+        order: 3,
         type: "skills",
       },
       {
@@ -100,14 +96,24 @@ export function ResumeUpload({ onExtract }: ResumeUploadProps) {
         title: "Certifications",
         content:
           "<p><strong>AWS Certified Developer</strong> | Amazon Web Services | 2022</p><ul><li>Expertise in developing and maintaining applications on AWS</li></ul><p><strong>React Developer Certification</strong> | Meta | 2021</p><ul><li>Advanced knowledge of React and related technologies</li></ul>",
-        order: 5,
+        order: 4,
         type: "certifications",
       },
     ];
-
+    const extractedPersonalDetails: PersonalDetailsType = {
+      name: "John Doe",
+      position: "Senior Software Engineer",
+      email: "john.doe@example.com",
+      phone: "(123) 456-7890",
+      location: "New York, NY",
+      linkedin: "linkedin.com/in/johndoe",
+      github: "github.com/johndoe",
+    };
     onExtract(extractedSections);
     setIsExtracting(false);
-
+    if (onExtractPersonalDetails) {
+      onExtractPersonalDetails(extractedPersonalDetails);
+    }
     toast({
       title: "Resume Extracted",
       description:
